@@ -1,0 +1,122 @@
+{
+  "name": "Email Send Reply API",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "",
+        "path": "/api/send-reply",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e91bfea2-ceaf-430f-a12f-d21311175602",
+      "name": "Webhook",
+      "webhookId": "{{ SEND_REPLY_WEBHOOK_ID }}"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validation des données de réponse email\nconst requestBody = $json.body;\n\n// Vérifier champs obligatoires\nif (!requestBody.to || !requestBody.subject || !requestBody.message) {\n  return [{\n    json: {\n      error: true,\n      message: \"Champs manquants: to, subject et message sont requis\",\n      received: requestBody\n    }\n  }];\n}\n\n// Validation email basique\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\nif (!emailRegex.test(requestBody.to)) {\n  return [{\n    json: {\n      error: true,\n      message: \"Adresse email invalide\"\n    }\n  }];\n}\n\n// Retourner données validées\nreturn [{\n  json: {\n    to: requestBody.to,\n    subject: requestBody.subject,\n    message: requestBody.message,\n    validatedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "e7251bc6-d44d-4cc4-bfe2-57f4c44cf41b",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "1ff79ccf-9207-48dc-902b-c775494b12e9",
+      "name": "Send a message",
+      "webhookId": "{{ GMAIL_SEND_WEBHOOK_ID }}",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "{{ GMAIL_CREDENTIAL_ID }}",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{{ JSON.stringify({\n  success: true,\n  message: \"Email envoyé avec succès\",\n  data: $json\n}, null, 2) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        624,
+        0
+      ],
+      "id": "197d888f-e546-4c8f-b1f0-4782aaf40535",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "a8d8c09d-b693-49e0-9ae6-c8c40b3b9539",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "{{ N8N_INSTANCE_ID }}"
+  },
+  "id": "ofycxrnFAf7GdEDq",
+  "tags": []
+}

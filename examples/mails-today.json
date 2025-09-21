@@ -1,0 +1,87 @@
+{
+  "emails": [
+    {
+      "id": "1996858f7a795932",
+      "threadId": "1996858f7a795932",
+      "expediteur": "leandremaster0@gmail.com",
+      "objet": "Test",
+      "contenu": "Test --- This email was sent automatically with n8n",
+      "dateReception": "2025-09-20T18:18:04.000Z",
+      "snippet": "Test --- This email was sent automatically with n8n",
+      "taille": 861,
+      "labels": [
+        "SENT",
+        "INBOX",
+        "UNREAD"
+      ],
+      "isUnread": true
+    },
+    {
+      "id": "1996856fcc3fe70f",
+      "threadId": "1996856fcc3fe70f",
+      "expediteur": "leandremaster0@gmail.com",
+      "objet": "Test réussi depuis n8n",
+      "contenu": "Si vous recevez ce message, l API d envoi fonctionne parfaitement. --- This email was sent automatically with n8n",
+      "dateReception": "2025-09-20T18:15:55.000Z",
+      "snippet": "Si vous recevez ce message, l API d envoi fonctionne parfaitement. --- This email was sent automatically with n8n",
+      "taille": 952,
+      "labels": [
+        "SENT"
+      ],
+      "isUnread": false
+    },
+    {
+      "id": "1996853524a98d32",
+      "threadId": "1996853524a98d32",
+      "expediteur": "leandremaster0@gmail.com",
+      "objet": "Test réussi depuis n8n",
+      "contenu": "Si vous recevez ce message, l API d envoi fonctionne parfaitement. --- This email was sent automatically with n8n",
+      "dateReception": "2025-09-20T18:11:55.000Z",
+      "snippet": "Si vous recevez ce message, l API d envoi fonctionne parfaitement. --- This email was sent automatically with n8n",
+      "taille": 952,
+      "labels": [
+        "SENT"
+      ],
+      "isUnread": false
+    },
+    {
+      "id": "19968519842e4dec",
+      "threadId": "199685194b027466",
+      "expediteur": "Mail Delivery Subsystem \u003Cmailer-daemon@googlemail.com\u003E",
+      "objet": "Delivery Status Notification (Failure)",
+      "contenu": "Address not found Your message wasn't delivered to test@example.com because the domain example.com couldn't be found. Check for typos or unnecessary spaces and try again. LEARN MORE This link",
+      "dateReception": "2025-09-20T18:10:01.000Z",
+      "snippet": "Address not found Your message wasn't delivered to test@example.com because the domain example.com couldn't be found. Check for typos or unnecessary spaces and try again. LEARN MORE This link",
+      "taille": 15968,
+      "labels": [
+        "INBOX",
+        "IMPORTANT",
+        "CATEGORY_UPDATES",
+        "UNREAD"
+      ],
+      "isUnread": true
+    },
+    {
+      "id": "199685194b027466",
+      "threadId": "199685194b027466",
+      "expediteur": "leandremaster0@gmail.com",
+      "objet": "Test depuis n8n",
+      "contenu": "Ceci est un test d envoi via n8n --- This email was sent automatically with n8n",
+      "dateReception": "2025-09-20T18:10:00.000Z",
+      "snippet": "Ceci est un test d envoi via n8n --- This email was sent automatically with n8n",
+      "taille": 889,
+      "labels": [
+        "SENT"
+      ],
+      "isUnread": false
+    }
+  ],
+  "count": 5,
+  "resumeIA": "Voici un résumé de l'email :\n\n\"L'expéditeur n8n.io vous envoie votre clé de licence gratuite pour n8n.\"",
+  "statistics": {
+    "total": 5,
+    "nonLus": 2,
+    "expediteursUniques": 2,
+    "tailleTotal": 19622
+  }
+}

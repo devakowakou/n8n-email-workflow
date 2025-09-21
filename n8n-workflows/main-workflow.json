@@ -1,0 +1,158 @@
+{
+  "name": "Email manager",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 5,
+        "filters": {
+          "receivedAfter": "={{ DateTime.now().minus({hours: 24}).toISO() }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        272,
+        -96
+      ],
+      "id": "88408f7a-e866-4aa4-b4e4-8291c9fc8314",
+      "name": "Get many messages",
+      "webhookId": "{{ GMAIL_WEBHOOK_ID }}",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "{{ GMAIL_CREDENTIAL_ID }}",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraction complète des données emails selon spécifications\nconst emails = [];\n\nfor (const item of $input.all()) {\n  // Fonction pour extraire les headers\n  const getHeader = (headers, name) => {\n    if (!headers) return '';\n    const header = headers.find(h => h.name && h.name.toLowerCase() === name.toLowerCase());\n    return header ? header.value : '';\n  };\n  \n  // Fonction pour extraire le contenu complet\n  const extractContent = (payload) => {\n    let content = '';\n    \n    try {\n      if (payload.body && payload.body.data) {\n        content = Buffer.from(payload.body.data, 'base64').toString('utf-8');\n      }\n      else if (payload.parts && Array.isArray(payload.parts)) {\n        for (const part of payload.parts) {\n          if (part.mimeType === 'text/plain' && part.body && part.body.data) {\n            content += Buffer.from(part.body.data, 'base64').toString('utf-8');\n            break;\n          }\n          else if (part.mimeType === 'text/html' && part.body && part.body.data && !content) {\n            let htmlContent = Buffer.from(part.body.data, 'base64').toString('utf-8');\n            content = htmlContent.replace(/<[^>]*>/g, ' ').replace(/\\s+/g, ' ').trim();\n          }\n        }\n      }\n      \n      if (!content) {\n        content = item.json.snippet || 'Contenu non disponible';\n      }\n    } catch (error) {\n      content = item.json.snippet || 'Erreur extraction contenu';\n    }\n    \n    return content.substring(0, 1500).replace(/\\r?\\n/g, ' ').trim();\n  };\n  \n  const headers = item.json.payload?.headers || [];\n  \n  // SPÉCIFICATIONS EXACTES DE L'EXERCICE :\n  const email = {\n    id: item.json.id,\n    threadId: item.json.threadId,\n    \n    // Les 4 informations demandées :\n    expediteur: item.json.From || getHeader(headers, 'From') || 'Expéditeur inconnu',\n    objet: item.json.Subject || getHeader(headers, 'Subject') || 'Sans objet', \n    contenu: extractContent(item.json.payload), // Contenu complet extrait\n    dateReception: new Date(parseInt(item.json.internalDate || 0)).toISOString(),\n    \n    // Informations supplémentaires utiles\n    snippet: item.json.snippet || '',\n    taille: item.json.sizeEstimate || 0,\n    labels: item.json.labels?.map(label => label.name) || [],\n    isUnread: item.json.labels?.some(label => label.name === 'UNREAD') || false\n  };\n  \n  emails.push(email);\n}\n\n// Données finales avec statistiques\nconst finalData = {\n  emails: emails,\n  count: emails.length,\n  dateExtraction: new Date().toISOString(),\n  periode: 'Emails du jour',\n  statistics: {\n    total: emails.length,\n    nonLus: emails.filter(e => e.isUnread).length,\n    expediteursUniques: [...new Set(emails.map(e => e.expediteur))].length,\n    tailleTotal: emails.reduce((sum, e) => sum + e.taille, 0)\n  }\n};\n\nconsole.log('Emails traités:', finalData.count);\nreturn [{ json: finalData }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -96
+      ],
+      "id": "5df0d37c-1db6-4c34-933f-a77266770f50",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST", 
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ GROQ_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"model\": \"llama-3.1-8b-instant\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu résumes des emails en français de manière concise.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Résume cet email: Sujet: Your free n8n license key. Expéditeur: n8n.io. Contenu: Voici votre clé de licence gratuite pour n8n.\"\n    }\n  ],\n  \"max_tokens\": 200,\n  \"temperature\": 0.3\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        752,
+        -96
+      ],
+      "id": "7afd74e7-7885-4eac-b283-ca99efa0471e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "path": "/emails",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -32,
+        -96
+      ],
+      "id": "2ccb505a-fb79-4ddb-9e8f-c2622d881367",
+      "name": "Webhook",
+      "webhookId": "{{ EMAILS_WEBHOOK_ID }}"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  emails: $node['Code in JavaScript'].json.emails,\n  count: $node['Code in JavaScript'].json.count,\n  processedAt: $node['Code in JavaScript'].json.processedAt,\n  resumeIA: $json.choices[0].message.content,\n  statistics: $node['Code in JavaScript'].json.statistics\n}, null, 2) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        976,
+        -96
+      ],
+      "id": "e152704e-4571-41e6-862d-99fe72261084",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "86672838-0f1b-4f3d-8c16-24ec828c4a56",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "{{ N8N_INSTANCE_ID }}"
+  },
+  "id": "8wE52I2c2dQQ4iIW",
+  "tags": []
+}
