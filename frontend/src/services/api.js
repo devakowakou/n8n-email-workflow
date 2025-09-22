@@ -5,43 +5,40 @@ export const API_ENDPOINTS = {
   sendReply: `${API_BASE}/api/send-reply`
 };
 
-export const fetchEmails = async () => {
+// Fonction utilitaire pour requêtes API
+async function apiRequest(url, options = {}, errorMsg = 'Erreur API') {
   try {
-    const response = await fetch(API_ENDPOINTS.emails);
+    const response = await fetch(url, options);
     if (!response.ok) {
-      throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+      throw new Error(`${errorMsg} (${response.status}: ${response.statusText})`);
     }
-    
-    const data = await response.json();
-    
-    if (data.emails && Array.isArray(data.emails)) {
-      return data;
-    } else {
-      throw new Error('Format de données invalide');
-    }
+    // Si pas de contenu (ex: 204), ne pas parser JSON
+    if (response.status === 204) return null;
+    return await response.json();
   } catch (error) {
-    console.error('Erreur chargement emails:', error);
+    console.error(errorMsg + ':', error);
     throw error;
+  }
+}
+
+export const fetchEmails = async () => {
+  const data = await apiRequest(API_ENDPOINTS.emails, {}, 'Erreur chargement emails');
+  if (data.emails && Array.isArray(data.emails)) {
+    return data;
+  } else {
+    throw new Error('Format de données invalide');
   }
 };
 
 export const sendEmailReply = async (replyData) => {
-  try {
-    const response = await fetch(API_ENDPOINTS.sendReply, {
+  await apiRequest(
+    API_ENDPOINTS.sendReply,
+    {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(replyData),
-    });
-    
-    if (!response.ok) {
-      throw new Error('Erreur lors de l\'envoi');
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Erreur envoi email:', error);
-    throw error;
-  }
+    },
+    "Erreur lors de l'envoi"
+  );
+  return true;
 };

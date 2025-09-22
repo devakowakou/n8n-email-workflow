@@ -2,6 +2,11 @@ version: '3.8'
 services:
   n8n:
     image: docker.n8n.io/n8nio/n8n
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
     container_name: n8n-email-manager
     restart: unless-stopped
     ports:
@@ -18,7 +23,12 @@ services:
       - N8N_PROTOCOL=http
       - N8N_LOG_LEVEL=info
       - NODE_FUNCTION_ALLOW_EXTERNAL=*
-      
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID  
     volumes:
       - ./n8n-data:/home/node/.n8n
       - ./data:/home/node/data
